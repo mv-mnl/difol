@@ -3,7 +3,8 @@
 App de control de gastos e ingresos. Stack: Docker, Node.js + Express (backend), React (frontend), MySQL (database).
 
 ## Estado actual
-- **Sprint 0 — Setup del proyecto**: en progreso
+- **Sprint 0 — Setup del proyecto**: completado
+- **Sprint 1 — Modelo de datos y API base**: completado
 
 ## Sprints
 
