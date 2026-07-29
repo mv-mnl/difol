@@ -5,6 +5,23 @@ function hoy() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function sanitizeMonto(value) {
+  const soloNumeros = value.replace(/[^0-9.]/g, "");
+  const [entero, ...resto] = soloNumeros.split(".");
+  return resto.length ? `${entero}.${resto.join("")}` : entero;
+}
+
+const TECLAS_CONTROL = [
+  "Backspace", "Delete", "Tab", "Escape", "Enter",
+  "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End",
+];
+
+function esTeclaPermitida(e) {
+  if (e.ctrlKey || e.metaKey) return true;
+  if (TECLAS_CONTROL.includes(e.key)) return true;
+  return e.key === "." || /^[0-9]$/.test(e.key);
+}
+
 const initialState = {
   tipo: "egreso",
   monto: "",
@@ -32,7 +49,7 @@ function MovimientoForm({ onCreated }) {
         setForm((f) =>
           cats.some((c) => String(c.id) === String(f.categoria_id))
             ? f
-            : { ...f, categoria_id: "" }
+            : { ...f, categoria_id: cats.length ? String(cats[0].id) : "" }
         );
       })
       .catch((err) => setError(err.message));
@@ -70,6 +87,7 @@ function MovimientoForm({ onCreated }) {
         ...initialState,
         tipo: f.tipo,
         lugar_id: f.lugar_id,
+        categoria_id: categorias.length ? String(categorias[0].id) : "",
       }));
       onCreated?.();
     } catch (err) {
@@ -109,11 +127,22 @@ function MovimientoForm({ onCreated }) {
       <label className="field">
         Monto
         <input
-          type="number"
-          min="0"
-          step="0.01"
+          type="text"
+          inputMode="decimal"
           value={form.monto}
-          onChange={(e) => update("monto", e.target.value)}
+          onChange={(e) => {
+            const limpio = sanitizeMonto(e.target.value);
+            e.target.value = limpio;
+            update("monto", limpio);
+          }}
+          onKeyDown={(e) => {
+            if (!esTeclaPermitida(e)) e.preventDefault();
+          }}
+          onPaste={(e) => {
+            e.preventDefault();
+            const texto = e.clipboardData.getData("text");
+            update("monto", sanitizeMonto(form.monto + texto));
+          }}
           required
         />
       </label>
@@ -128,36 +157,60 @@ function MovimientoForm({ onCreated }) {
         />
       </label>
 
-      <label className="field">
+      <div className="field">
         Lugar
-        <select
-          value={form.lugar_id}
-          onChange={(e) => update("lugar_id", e.target.value)}
-          required
-        >
-          <option value="">Seleccionar...</option>
+        <div className="lugar-buttons" role="radiogroup" aria-label="Lugar">
           {lugares.map((l) => (
-            <option key={l.id} value={l.id}>
+            <label
+              key={l.id}
+              className={`lugar-btn ${String(form.lugar_id) === String(l.id) ? "selected" : ""}`}
+            >
+              <input
+                type="radio"
+                name="lugar_id"
+                value={l.id}
+                checked={String(form.lugar_id) === String(l.id)}
+                onChange={(e) => update("lugar_id", e.target.value)}
+              />
               {l.nombre}
-            </option>
+            </label>
           ))}
-        </select>
-      </label>
+          {!lugares.length && (
+            <span className="chart-empty">No hay cuentas cargadas — agregalas en Settings.</span>
+          )}
+        </div>
+      </div>
 
-      <label className="field">
+      <div className="field">
         Categoria (opcional)
-        <select
-          value={form.categoria_id}
-          onChange={(e) => update("categoria_id", e.target.value)}
-        >
-          <option value="">Sin categoria</option>
+        <div className="lugar-buttons" role="radiogroup" aria-label="Categoria">
           {categorias.map((c) => (
-            <option key={c.id} value={c.id}>
+            <label
+              key={c.id}
+              className={`lugar-btn ${String(form.categoria_id) === String(c.id) ? "selected" : ""}`}
+            >
+              <input
+                type="radio"
+                name="categoria_id"
+                value={c.id}
+                checked={String(form.categoria_id) === String(c.id)}
+                onChange={(e) => update("categoria_id", e.target.value)}
+              />
               {c.nombre}
-            </option>
+            </label>
           ))}
-        </select>
-      </label>
+          <label className={`lugar-btn ${!form.categoria_id ? "selected" : ""}`}>
+            <input
+              type="radio"
+              name="categoria_id"
+              value=""
+              checked={!form.categoria_id}
+              onChange={() => update("categoria_id", "")}
+            />
+            Sin categoria
+          </label>
+        </div>
+      </div>
 
       <label className="field">
         Descripcion (opcional)

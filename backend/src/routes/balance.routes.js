@@ -1,11 +1,16 @@
 import { Router } from "express";
 import pool from "../db.js";
+import { validarRangoFechas } from "../validation.js";
 
 const router = Router();
 
 router.get("/", async (req, res, next) => {
   try {
     const { desde, hasta } = req.query;
+    const errorFechas = validarRangoFechas({ desde, hasta });
+    if (errorFechas) {
+      return res.status(400).json({ error: errorFechas });
+    }
     const condiciones = [];
     const params = [];
 
