@@ -1,0 +1,122 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #f5f6f8;
+  color: #1c232b;
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.app header h1 {
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+}
+
+.movimiento-form {
+  background: #fff;
+  border: 1px solid #e2e5ea;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.movimiento-form h2 {
+  margin: 0 0 4px;
+  font-size: 1.125rem;
+}
+
+.field-row {
+  display: flex;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: #52586a;
+}
+
+.field input,
+.field select {
+  padding: 8px 10px;
+  border: 1px solid #cdd2db;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-family: inherit;
+}
+
+.movimiento-form button {
+  align-self: flex-start;
+  background: #2a78d6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.movimiento-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.form-error {
+  color: #c0392b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.movimientos-section h2 {
+  font-size: 1.125rem;
+}
+
+.movimientos-list {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #e2e5ea;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.movimientos-list th,
+.movimientos-list td {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #eef0f3;
+}
+
+.movimientos-list th {
+  color: #898f9e;
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+}
+
+.movimientos-list .monto {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.movimientos-list .tipo-ingreso .monto {
+  color: #1baf7a;
+}
+
+.movimientos-list .tipo-egreso .monto {
+  color: #c0392b;
+}

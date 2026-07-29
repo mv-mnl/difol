@@ -1,21 +1,41 @@
-import { useEffect, useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+import { useCallback, useEffect, useState } from "react";
+import MovimientoForm from "./components/MovimientoForm.jsx";
+import MovimientosList from "./components/MovimientosList.jsx";
+import { getMovimientos } from "./api.js";
+import "./App.css";
 
 function App() {
-  const [status, setStatus] = useState("cargando...");
+  const [movimientos, setMovimientos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetch(`${API_URL}/api/health`)
-      .then((res) => res.json())
-      .then((data) => setStatus(data.status))
-      .catch(() => setStatus("sin conexion al backend"));
+  const cargarMovimientos = useCallback(() => {
+    setLoading(true);
+    getMovimientos()
+      .then(setMovimientos)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    cargarMovimientos();
+  }, [cargarMovimientos]);
+
   return (
-    <div>
-      <h1>Difol</h1>
-      <p>Estado backend: {status}</p>
+    <div className="app">
+      <header>
+        <h1>Difol</h1>
+      </header>
+
+      <main>
+        <MovimientoForm onCreated={cargarMovimientos} />
+
+        <section className="movimientos-section">
+          <h2>Movimientos recientes</h2>
+          {error && <p className="form-error">{error}</p>}
+          <MovimientosList movimientos={movimientos} loading={loading} />
+        </section>
+      </main>
     </div>
   );
 }
