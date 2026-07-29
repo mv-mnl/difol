@@ -1,17 +1,9 @@
 import { useEffect, useState } from "react";
 import { getBalance } from "../api.js";
+import { primerDiaDelMes, hoy } from "../utils/fechas.js";
 
 function formatMoney(n) {
   return `$${Number(n).toFixed(2)}`;
-}
-
-function primerDiaDelMes() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-}
-
-function hoy() {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function Dashboard() {

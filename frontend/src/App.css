@@ -10,7 +10,7 @@ body {
 }
 
 .app {
-  max-width: 720px;
+  max-width: 860px;
   margin: 0 auto;
   padding: 24px 20px 60px;
 }
@@ -196,4 +196,194 @@ body {
 
 .movimientos-list .tipo-egreso .monto {
   color: #c0392b;
+}
+
+/* Metricas */
+
+.metricas {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.metricas section {
+  background: #fff;
+  border: 1px solid #e2e5ea;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.metricas h2 {
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+.metricas h3 {
+  font-size: 0.9375rem;
+  margin: 0 0 12px;
+  color: #52586a;
+}
+
+.metricas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.metricas-header .field-row {
+  gap: 16px;
+}
+
+.metricas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.chart-empty {
+  color: #898f9e;
+  font-size: 0.875rem;
+}
+
+/* BarList */
+
+.bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bar-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px 1fr 76px;
+  align-items: center;
+  gap: 10px;
+}
+
+.bar-label {
+  font-size: 0.8125rem;
+  color: #52586a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  background: #eef0f3;
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  min-width: 4px;
+}
+
+.bar-value {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: #1c232b;
+}
+
+.bar-row[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  background: #1c232b;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* MonthlyTrendChart */
+
+.trend-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: #52586a;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.trend-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 160px;
+  border-bottom: 1px solid #e2e5ea;
+  padding-bottom: 4px;
+}
+
+.trend-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.trend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 140px;
+}
+
+.trend-bar {
+  position: relative;
+  width: 10px;
+  border-radius: 3px 3px 0 0;
+}
+
+.trend-bar[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  background: #1c232b;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.trend-month-label {
+  font-size: 0.6875rem;
+  color: #898f9e;
 }
