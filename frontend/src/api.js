@@ -22,6 +22,14 @@ export function getMovimientos() {
   return fetch(`${API_URL}/api/movimientos`).then(handle);
 }
 
+export function getBalance({ desde, hasta } = {}) {
+  const params = new URLSearchParams();
+  if (desde) params.set("desde", desde);
+  if (hasta) params.set("hasta", hasta);
+  const qs = params.toString() ? `?${params.toString()}` : "";
+  return fetch(`${API_URL}/api/balance${qs}`).then(handle);
+}
+
 export function crearMovimiento(movimiento) {
   return fetch(`${API_URL}/api/movimientos`, {
     method: "POST",

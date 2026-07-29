@@ -1,40 +1,36 @@
-import { useCallback, useEffect, useState } from "react";
-import MovimientoForm from "./components/MovimientoForm.jsx";
-import MovimientosList from "./components/MovimientosList.jsx";
-import { getMovimientos } from "./api.js";
+import { useState } from "react";
+import Dashboard from "./pages/Dashboard.jsx";
+import CargarMovimiento from "./pages/CargarMovimiento.jsx";
 import "./App.css";
 
+const TABS = [
+  { id: "dashboard", label: "Dashboard" },
+  { id: "carga", label: "Cargar movimiento" },
+];
+
 function App() {
-  const [movimientos, setMovimientos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const cargarMovimientos = useCallback(() => {
-    setLoading(true);
-    getMovimientos()
-      .then(setMovimientos)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    cargarMovimientos();
-  }, [cargarMovimientos]);
+  const [tab, setTab] = useState("dashboard");
 
   return (
     <div className="app">
       <header>
         <h1>Difol</h1>
+        <nav className="tabs">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              className={tab === t.id ? "active" : ""}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
       </header>
 
       <main>
-        <MovimientoForm onCreated={cargarMovimientos} />
-
-        <section className="movimientos-section">
-          <h2>Movimientos recientes</h2>
-          {error && <p className="form-error">{error}</p>}
-          <MovimientosList movimientos={movimientos} loading={loading} />
-        </section>
+        {tab === "dashboard" && <Dashboard />}
+        {tab === "carga" && <CargarMovimiento />}
       </main>
     </div>
   );

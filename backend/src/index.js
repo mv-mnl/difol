@@ -4,6 +4,7 @@ import "dotenv/config";
 import lugaresRouter from "./routes/lugares.routes.js";
 import categoriasRouter from "./routes/categorias.routes.js";
 import movimientosRouter from "./routes/movimientos.routes.js";
+import balanceRouter from "./routes/balance.routes.js";
 
 const app = express();
 app.use(cors());
@@ -16,6 +17,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/lugares", lugaresRouter);
 app.use("/api/categorias", categoriasRouter);
 app.use("/api/movimientos", movimientosRouter);
+app.use("/api/balance", balanceRouter);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
