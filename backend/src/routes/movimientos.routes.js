@@ -1,5 +1,6 @@
 import { Router } from "express";
 import pool from "../db.js";
+import { esFechaValida, validarRangoFechas } from "../validation.js";
 
 const router = Router();
 
@@ -16,6 +17,9 @@ async function validarMovimiento(body) {
   }
   if (!fecha) {
     return "fecha es obligatoria";
+  }
+  if (!esFechaValida(fecha)) {
+    return "fecha debe tener el formato YYYY-MM-DD";
   }
   if (!lugar_id) {
     return "lugar_id es obligatorio";
@@ -44,6 +48,10 @@ async function validarMovimiento(body) {
 router.get("/", async (req, res, next) => {
   try {
     const { tipo, desde, hasta } = req.query;
+    const errorFechas = validarRangoFechas({ desde, hasta });
+    if (errorFechas) {
+      return res.status(400).json({ error: errorFechas });
+    }
     const condiciones = [];
     const params = [];
 

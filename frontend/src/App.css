@@ -7,6 +7,7 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   background: #f5f6f8;
   color: #1c232b;
+  overflow-x: hidden;
 }
 
 .app {
@@ -25,9 +26,17 @@ body {
   gap: 4px;
   margin-bottom: 24px;
   border-bottom: 1px solid #e2e5ea;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tabs button {
+  flex-shrink: 0;
   background: none;
   border: none;
   padding: 10px 14px;
@@ -36,6 +45,7 @@ body {
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
+  white-space: nowrap;
 }
 
 .tabs button.active {
@@ -135,6 +145,47 @@ body {
   font-family: inherit;
 }
 
+.lugar-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lugar-btn {
+  position: relative;
+  padding: 8px 16px;
+  border: 1px solid #cdd2db;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #52586a;
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.lugar-btn input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lugar-btn:hover {
+  border-color: #2a78d6;
+}
+
+.lugar-btn.selected {
+  background: #2a78d6;
+  border-color: #2a78d6;
+  color: #fff;
+}
+
+.lugar-btn:has(input:focus-visible) {
+  outline: 2px solid #2a78d6;
+  outline-offset: 2px;
+}
+
 .movimiento-form button {
   align-self: flex-start;
   background: #2a78d6;
@@ -161,13 +212,19 @@ body {
   font-size: 1.125rem;
 }
 
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 10px;
+}
+
 .movimientos-list {
   width: 100%;
+  min-width: 560px;
   border-collapse: collapse;
   background: #fff;
   border: 1px solid #e2e5ea;
   border-radius: 10px;
-  overflow: hidden;
 }
 
 .movimientos-list th,

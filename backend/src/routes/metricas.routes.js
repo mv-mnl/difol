@@ -1,5 +1,6 @@
 import { Router } from "express";
 import pool from "../db.js";
+import { validarRangoFechas } from "../validation.js";
 
 const router = Router();
 
@@ -10,6 +11,10 @@ router.get("/por-categoria", async (req, res, next) => {
     const { tipo, desde, hasta } = req.query;
     if (!TIPOS.includes(tipo)) {
       return res.status(400).json({ error: "tipo debe ser 'ingreso' o 'egreso'" });
+    }
+    const errorFechas = validarRangoFechas({ desde, hasta });
+    if (errorFechas) {
+      return res.status(400).json({ error: errorFechas });
     }
     const condiciones = ["m.tipo = ?"];
     const params = [tipo];
@@ -40,6 +45,10 @@ router.get("/por-categoria", async (req, res, next) => {
 router.get("/por-lugar", async (req, res, next) => {
   try {
     const { tipo, desde, hasta } = req.query;
+    const errorFechas = validarRangoFechas({ desde, hasta });
+    if (errorFechas) {
+      return res.status(400).json({ error: errorFechas });
+    }
     const condiciones = [];
     const params = [];
     if (tipo) {
