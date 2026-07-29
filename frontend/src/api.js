@@ -30,6 +30,29 @@ export function getBalance({ desde, hasta } = {}) {
   return fetch(`${API_URL}/api/balance${qs}`).then(handle);
 }
 
+function buildQuery(params) {
+  const qs = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== "")
+  ).toString();
+  return qs ? `?${qs}` : "";
+}
+
+export function getMetricasPorCategoria({ tipo, desde, hasta }) {
+  return fetch(
+    `${API_URL}/api/metricas/por-categoria${buildQuery({ tipo, desde, hasta })}`
+  ).then(handle);
+}
+
+export function getMetricasPorLugar({ tipo, desde, hasta } = {}) {
+  return fetch(
+    `${API_URL}/api/metricas/por-lugar${buildQuery({ tipo, desde, hasta })}`
+  ).then(handle);
+}
+
+export function getMetricasPorMes(anio) {
+  return fetch(`${API_URL}/api/metricas/por-mes${buildQuery({ anio })}`).then(handle);
+}
+
 export function crearMovimiento(movimiento) {
   return fetch(`${API_URL}/api/movimientos`, {
     method: "POST",
