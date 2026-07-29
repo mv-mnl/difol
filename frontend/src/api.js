@@ -9,13 +9,45 @@ async function handle(res) {
   return res.json();
 }
 
+function sendJson(url, method, body) {
+  return fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).then(handle);
+}
+
 export function getLugares() {
   return fetch(`${API_URL}/api/lugares`).then(handle);
+}
+
+export function crearLugar(nombre) {
+  return sendJson(`${API_URL}/api/lugares`, "POST", { nombre });
+}
+
+export function actualizarLugar(id, nombre) {
+  return sendJson(`${API_URL}/api/lugares/${id}`, "PUT", { nombre });
+}
+
+export function eliminarLugar(id) {
+  return fetch(`${API_URL}/api/lugares/${id}`, { method: "DELETE" }).then(handle);
 }
 
 export function getCategorias(tipo) {
   const qs = tipo ? `?tipo=${tipo}` : "";
   return fetch(`${API_URL}/api/categorias${qs}`).then(handle);
+}
+
+export function crearCategoria(categoria) {
+  return sendJson(`${API_URL}/api/categorias`, "POST", categoria);
+}
+
+export function actualizarCategoria(id, categoria) {
+  return sendJson(`${API_URL}/api/categorias/${id}`, "PUT", categoria);
+}
+
+export function eliminarCategoria(id) {
+  return fetch(`${API_URL}/api/categorias/${id}`, { method: "DELETE" }).then(handle);
 }
 
 export function getMovimientos() {
@@ -54,9 +86,5 @@ export function getMetricasPorMes(anio) {
 }
 
 export function crearMovimiento(movimiento) {
-  return fetch(`${API_URL}/api/movimientos`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(movimiento),
-  }).then(handle);
+  return sendJson(`${API_URL}/api/movimientos`, "POST", movimiento);
 }
