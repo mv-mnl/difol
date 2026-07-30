@@ -19,6 +19,11 @@ Se detecto que `docker-compose.yml` (dev) y `docker-compose.prod.yml` generaban 
 
 Arreglado agregando `image: difol-backend-prod` / `image: difol-frontend-prod` explicitos en `docker-compose.prod.yml`, para que dev y produccion nunca compartan tag de imagen. Si se alterna seguido entre ambos modos, conviene `docker compose up -d --build` la primera vez despues de haber levantado el otro modo, para evitar arrastrar una imagen vieja con un nombre de imagen no aislado (esto ya no deberia pasar con la separacion de nombres, pero es buena practica).
 
+## Correccion posterior: healthcheck de mysql insuficiente bajo carga de disco del host
+Se detecto que `docker compose -f docker-compose.prod.yml up` fallaba con `dependency failed to start: container difol-mysql-1 is unhealthy`, deteniendo a `backend` y `frontend` (ambos dependen de `mysql: condition: service_healthy`). Investigando el contenedor de mysql, no habia ningun error real: `mysqld --initialize-insecure` seguia vivo y avanzando, solo que muy lento (mas de 2 minutos para lo que normalmente tarda unos segundos), porque el disco del host (`md0`, el RAID donde vive `docker-data`) estaba saturado por otros servicios corriendo en el mismo servidor (syncthing, deemix, cloudflared, etc.) — `iostat` mostraba `%util` cercano a 100% y latencias de escritura de varios segundos.
+
+El healthcheck original (`interval: 5s`, `retries: 10`, sin `start_period`) le daba a mysql apenas 50s antes de marcarlo `unhealthy`, insuficiente para este servidor cuando el disco esta bajo presion. Se ajusto tanto en `docker-compose.yml` como en `docker-compose.prod.yml`: `retries: 60` y se agrego `start_period: 60s`, dando a mysql varios minutos de margen antes de que Docker Compose se rinda, sin afectar la deteccion de fallas reales (el intervalo de chequeo sigue en 5s una vez pasado el `start_period`).
+
 ## Pendientes / mejoras futuras (fuera de alcance de este roadmap)
 - No hay autenticación ni multi-usuario — la app asume un único usuario/cuenta, consistente con lo descrito en `CLAUDE.md`.
 - El quirk de `node --watch` sobre bind mounts en dev es conocido pero no se investigó su causa raíz a fondo (no afecta producción, que no usa `--watch`).
