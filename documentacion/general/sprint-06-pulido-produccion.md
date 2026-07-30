@@ -24,6 +24,17 @@ Se detecto que `docker compose -f docker-compose.prod.yml up` fallaba con `depen
 
 El healthcheck original (`interval: 5s`, `retries: 10`, sin `start_period`) le daba a mysql apenas 50s antes de marcarlo `unhealthy`, insuficiente para este servidor cuando el disco esta bajo presion. Se ajusto tanto en `docker-compose.yml` como en `docker-compose.prod.yml`: `retries: 60` y se agrego `start_period: 60s`, dando a mysql varios minutos de margen antes de que Docker Compose se rinda, sin afectar la deteccion de fallas reales (el intervalo de chequeo sigue en 5s una vez pasado el `start_period`).
 
+## Correccion posterior: URL del backend hardcodeada en el bundle rompia el acceso segun la red usada
+Se detecto que la app mostraba datos distintos (o ninguno) segun si se accedia por la IP de Tailscale o por la IP local de la LAN. Causa: `VITE_API_URL` se resolvia en build time (Vite reemplaza `import.meta.env.VITE_*` en el JS estatico generado) y en `.env` estaba fijada a la IP de Tailscale del host (`http://100.75.20.68:4000`) para que fuera alcanzable "desde cualquier dispositivo de la tailnet". El bundle quedaba con esa IP grabada sin importar por donde se cargara la pagina, asi que cualquier dispositivo sin ruta a esa IP (por ejemplo, en la LAN local pero fuera de la tailnet) fallaba el fetch silenciosamente y mostraba la lista de movimientos vacia. El backend nunca filtro nada por IP — no hay ninguna logica de ese tipo en el codigo.
+
+Arreglado eliminando la dependencia de una URL absoluta:
+- `frontend/src/api.js`: `API_URL` ahora cae a `""` (relativo) en vez de a `http://localhost:4000`, asi que todos los fetch pegan a rutas relativas (`/api/movimientos`, etc.) en el mismo origen desde el que se cargo la SPA.
+- `frontend/nginx.conf` (produccion): nueva `location /api/` que hace `proxy_pass http://backend:4000` dentro de la red interna de Docker.
+- `frontend/vite.config.js` (desarrollo): `server.proxy` para `/api` apuntando a `http://backend:4000`, mismo comportamiento que nginx pero via el dev server de Vite.
+- Se quito `VITE_API_URL` de `docker-compose.yml`, `docker-compose.prod.yml`, `frontend/Dockerfile.prod`, `.env` y `.env.example` — ya no hace falta fijar ninguna IP a mano.
+
+Con esto el navegador siempre llama a `/api/...` en el mismo host:puerto por el que se accedio a la app (Tailscale, LAN o `localhost`), sin importar la red del dispositivo cliente. Verificado en produccion con `docker compose -f docker-compose.prod.yml up -d --build frontend backend`: `curl http://localhost:8080/api/movimientos` (puerto del frontend, no el 4000 del backend) devuelve los datos reales a traves del proxy, y el bundle generado ya no contiene ninguna IP hardcodeada (`grep` sobre `/usr/share/nginx/html/assets/` sin coincidencias).
+
 ## Pendientes / mejoras futuras (fuera de alcance de este roadmap)
 - No hay autenticación ni multi-usuario — la app asume un único usuario/cuenta, consistente con lo descrito en `CLAUDE.md`.
 - El quirk de `node --watch` sobre bind mounts en dev es conocido pero no se investigó su causa raíz a fondo (no afecta producción, que no usa `--watch`).
