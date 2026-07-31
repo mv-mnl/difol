@@ -85,6 +85,44 @@ export function getMetricasPorMes(anio) {
   return fetch(`${API_URL}/api/metricas/por-mes${buildQuery({ anio })}`).then(handle);
 }
 
+export function getMetricasResumen({ desde, hasta } = {}) {
+  return fetch(`${API_URL}/api/metricas/resumen${buildQuery({ desde, hasta })}`).then(handle);
+}
+
+export function getMetricasSerieMensual(meses) {
+  return fetch(`${API_URL}/api/metricas/serie-mensual${buildQuery({ meses })}`).then(handle);
+}
+
+export function getMetricasProyeccionMes() {
+  return fetch(`${API_URL}/api/metricas/proyeccion-mes`).then(handle);
+}
+
+export function getMetricasCategoriaEvolucion({ tipo, meses }) {
+  return fetch(
+    `${API_URL}/api/metricas/categoria-evolucion${buildQuery({ tipo, meses })}`
+  ).then(handle);
+}
+
+export function getMetricasLugarCategoria({ tipo, desde, hasta } = {}) {
+  return fetch(
+    `${API_URL}/api/metricas/lugar-categoria${buildQuery({ tipo, desde, hasta })}`
+  ).then(handle);
+}
+
+export function getMetricasHabitos({ tipo, desde, hasta, umbralHormiga }) {
+  return fetch(
+    `${API_URL}/api/metricas/habitos${buildQuery({ tipo, desde, hasta, umbralHormiga })}`
+  ).then(handle);
+}
+
+export function getMetricasCalidad() {
+  return fetch(`${API_URL}/api/metricas/calidad`).then(handle);
+}
+
+export function getMetricasAvanzadas(meses) {
+  return fetch(`${API_URL}/api/metricas/avanzadas${buildQuery({ meses })}`).then(handle);
+}
+
 export function crearMovimiento(movimiento) {
   return sendJson(`${API_URL}/api/movimientos`, "POST", movimiento);
 }

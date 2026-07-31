@@ -10,6 +10,7 @@ App de control de gastos e ingresos. Stack: Docker, Node.js + Express (backend),
 - **Sprint 4 — Métricas**: completado
 - **Sprint 5 — Settings**: completado
 - **Sprint 6 — Pulido y documentación**: completado
+- **Sprint 7 — Métricas completas**: completado
 
 ## Sprints
 
@@ -47,3 +48,7 @@ App de control de gastos e ingresos. Stack: Docker, Node.js + Express (backend),
 - Revisar que `documentacion/{general,backend,frontend,database}` esté al día
 - Manejo de errores, validaciones finales, ajustes de UX
 - Preparar deploy con Docker en modo producción
+
+### Sprint 7 — Métricas completas
+- Cubrir todas las métricas listadas en `metricas_movimientos.md` (flujo general, categoría, lugar, hábitos, comparativas temporales, calidad de datos, avanzadas), excepto presupuesto (requiere una feature nueva, fuera de alcance por ahora)
+- Script de datos de prueba (24 meses de movimientos sintéticos) para poder ver las métricas con volumen realista
