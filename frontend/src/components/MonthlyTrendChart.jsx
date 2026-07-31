@@ -1,9 +1,5 @@
 import { INGRESO_COLOR, EGRESO_COLOR } from "../theme/colors.js";
-
-const MESES_ABR = [
-  "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-  "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
-];
+import { MESES_ABR } from "../utils/fechas.js";
 
 const ALTURA_MAX = 140;
 
