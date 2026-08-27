@@ -13,10 +13,13 @@ router.get("/", async (req, res, next) => {
     }
     const [rows] = tipo
       ? await pool.query(
-          "SELECT * FROM categorias WHERE tipo = ? ORDER BY nombre",
-          [tipo]
+          "SELECT * FROM categorias WHERE usuario_id = ? AND tipo = ? ORDER BY nombre",
+          [req.usuarioId, tipo]
         )
-      : await pool.query("SELECT * FROM categorias ORDER BY tipo, nombre");
+      : await pool.query(
+          "SELECT * FROM categorias WHERE usuario_id = ? ORDER BY tipo, nombre",
+          [req.usuarioId]
+        );
     res.json(rows);
   } catch (err) {
     next(err);
@@ -33,8 +36,8 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: "tipo debe ser 'ingreso' o 'egreso'" });
     }
     const [result] = await pool.query(
-      "INSERT INTO categorias (nombre, tipo) VALUES (?, ?)",
-      [nombre.trim(), tipo]
+      "INSERT INTO categorias (usuario_id, nombre, tipo) VALUES (?, ?, ?)",
+      [req.usuarioId, nombre.trim(), tipo]
     );
     res.status(201).json({ id: result.insertId, nombre: nombre.trim(), tipo });
   } catch (err) {
@@ -57,8 +60,8 @@ router.put("/:id", async (req, res, next) => {
       return res.status(400).json({ error: "tipo debe ser 'ingreso' o 'egreso'" });
     }
     const [result] = await pool.query(
-      "UPDATE categorias SET nombre = ?, tipo = ? WHERE id = ?",
-      [nombre.trim(), tipo, req.params.id]
+      "UPDATE categorias SET nombre = ?, tipo = ? WHERE id = ? AND usuario_id = ?",
+      [nombre.trim(), tipo, req.params.id, req.usuarioId]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "categoria no encontrada" });
@@ -76,9 +79,10 @@ router.put("/:id", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
-    const [result] = await pool.query("DELETE FROM categorias WHERE id = ?", [
-      req.params.id,
-    ]);
+    const [result] = await pool.query(
+      "DELETE FROM categorias WHERE id = ? AND usuario_id = ?",
+      [req.params.id, req.usuarioId]
+    );
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "categoria no encontrada" });
     }

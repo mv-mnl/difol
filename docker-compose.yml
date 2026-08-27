@@ -29,11 +29,13 @@ services:
       DB_USER: ${DB_USER:-difol}
       DB_PASSWORD: ${DB_PASSWORD:-difol}
       DB_NAME: ${DB_NAME:-difol}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-cambiar-en-produccion}
     ports:
       - "4000:4000"
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - ./database:/app/database:ro
     depends_on:
       mysql:
         condition: service_healthy

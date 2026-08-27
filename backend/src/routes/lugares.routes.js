@@ -3,9 +3,12 @@ import pool from "../db.js";
 
 const router = Router();
 
-router.get("/", async (_req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM lugares ORDER BY nombre");
+    const [rows] = await pool.query(
+      "SELECT * FROM lugares WHERE usuario_id = ? ORDER BY nombre",
+      [req.usuarioId]
+    );
     res.json(rows);
   } catch (err) {
     next(err);
@@ -19,8 +22,8 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: "nombre es obligatorio" });
     }
     const [result] = await pool.query(
-      "INSERT INTO lugares (nombre) VALUES (?)",
-      [nombre.trim()]
+      "INSERT INTO lugares (usuario_id, nombre) VALUES (?, ?)",
+      [req.usuarioId, nombre.trim()]
     );
     res.status(201).json({ id: result.insertId, nombre: nombre.trim() });
   } catch (err) {
@@ -38,8 +41,8 @@ router.put("/:id", async (req, res, next) => {
       return res.status(400).json({ error: "nombre es obligatorio" });
     }
     const [result] = await pool.query(
-      "UPDATE lugares SET nombre = ? WHERE id = ?",
-      [nombre.trim(), req.params.id]
+      "UPDATE lugares SET nombre = ? WHERE id = ? AND usuario_id = ?",
+      [nombre.trim(), req.params.id, req.usuarioId]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "lugar no encontrado" });
@@ -55,9 +58,10 @@ router.put("/:id", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
-    const [result] = await pool.query("DELETE FROM lugares WHERE id = ?", [
-      req.params.id,
-    ]);
+    const [result] = await pool.query(
+      "DELETE FROM lugares WHERE id = ? AND usuario_id = ?",
+      [req.params.id, req.usuarioId]
+    );
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "lugar no encontrado" });
     }

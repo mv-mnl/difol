@@ -11,8 +11,8 @@ router.get("/", async (req, res, next) => {
     if (errorFechas) {
       return res.status(400).json({ error: errorFechas });
     }
-    const condiciones = [];
-    const params = [];
+    const condiciones = ["usuario_id = ?"];
+    const params = [req.usuarioId];
 
     if (desde) {
       condiciones.push("fecha >= ?");
@@ -22,7 +22,7 @@ router.get("/", async (req, res, next) => {
       condiciones.push("fecha <= ?");
       params.push(hasta);
     }
-    const where = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
+    const where = `WHERE ${condiciones.join(" AND ")}`;
 
     const [rows] = await pool.query(
       `SELECT tipo, COALESCE(SUM(monto), 0) AS total

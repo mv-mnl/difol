@@ -6,10 +6,17 @@ Stack: Docker, Node.js + Express (backend), React + Vite (frontend), MySQL (base
 
 ## Partes de la app
 
+- **Login / registro**: cada usuario tiene su propia cuenta (email + contrasena); sus lugares, categorias y movimientos son privados.
 - **Dashboard**: balance total e ingresos/gastos del mes actual.
 - **Cargar movimiento**: alta de movimientos y listado de los mas recientes.
 - **Metricas**: gasto/ingreso por categoria y por lugar (mes actual), y evolucion anual.
 - **Settings**: administracion de cuentas (lugares) y categorias.
+
+## Autenticacion
+
+El login es requerido: todos los endpoints salvo `/api/health` y `/api/auth/*` esperan un JWT (`Authorization: Bearer <token>`), que el frontend guarda en `localStorage` tras iniciar sesion. `POST /api/auth/register` crea la cuenta; si es la primera cuenta que se registra en el sistema, se queda automaticamente con cualquier dato preexistente en la base (lugares/categorias/movimientos cargados antes de que existiera el login).
+
+Definir `JWT_SECRET` en el `.env` (ver `.env.example`) — en produccion es obligatorio, el `docker-compose.prod.yml` no arranca sin el.
 
 ## Correr en desarrollo
 
