@@ -50,8 +50,10 @@ export function eliminarCategoria(id) {
   return fetch(`${API_URL}/api/categorias/${id}`, { method: "DELETE" }).then(handle);
 }
 
-export function getMovimientos() {
-  return fetch(`${API_URL}/api/movimientos`).then(handle);
+export function getMovimientos({ tipo, desde, hasta } = {}) {
+  return fetch(
+    `${API_URL}/api/movimientos${buildQuery({ tipo, desde, hasta })}`
+  ).then(handle);
 }
 
 export function getBalance({ desde, hasta } = {}) {
@@ -125,4 +127,12 @@ export function getMetricasAvanzadas(meses) {
 
 export function crearMovimiento(movimiento) {
   return sendJson(`${API_URL}/api/movimientos`, "POST", movimiento);
+}
+
+export function actualizarMovimiento(id, movimiento) {
+  return sendJson(`${API_URL}/api/movimientos/${id}`, "PUT", movimiento);
+}
+
+export function eliminarMovimiento(id) {
+  return fetch(`${API_URL}/api/movimientos/${id}`, { method: "DELETE" }).then(handle);
 }

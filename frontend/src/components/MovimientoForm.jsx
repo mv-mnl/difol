@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
-import { getLugares, getCategorias, crearMovimiento } from "../api.js";
-
-function hoy() {
-  return new Date().toISOString().slice(0, 10);
-}
+import { getLugares, getCategorias, crearMovimiento, actualizarMovimiento } from "../api.js";
+import { hoy } from "../utils/fechas.js";
 
 function sanitizeMonto(value) {
   const soloNumeros = value.replace(/[^0-9.]/g, "");
@@ -31,10 +28,24 @@ const initialState = {
   lugar_id: "",
 };
 
-function MovimientoForm({ onCreated }) {
+function estadoDesdeMovimiento(movimiento) {
+  return {
+    tipo: movimiento.tipo,
+    monto: String(movimiento.monto),
+    fecha: movimiento.fecha.slice(0, 10),
+    descripcion: movimiento.descripcion || "",
+    categoria_id: movimiento.categoria_id ? String(movimiento.categoria_id) : "",
+    lugar_id: movimiento.lugar_id ? String(movimiento.lugar_id) : "",
+  };
+}
+
+function MovimientoForm({ onCreated, movimiento, onSaved, onCancel }) {
+  const editando = Boolean(movimiento);
   const [lugares, setLugares] = useState([]);
   const [categorias, setCategorias] = useState([]);
-  const [form, setForm] = useState(initialState);
+  const [form, setForm] = useState(() =>
+    editando ? estadoDesdeMovimiento(movimiento) : initialState
+  );
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -73,23 +84,30 @@ function MovimientoForm({ onCreated }) {
       return;
     }
 
+    const payload = {
+      tipo: form.tipo,
+      monto,
+      fecha: form.fecha,
+      descripcion: form.descripcion || undefined,
+      categoria_id: form.categoria_id ? Number(form.categoria_id) : null,
+      lugar_id: Number(form.lugar_id),
+    };
+
     setEnviando(true);
     try {
-      await crearMovimiento({
-        tipo: form.tipo,
-        monto,
-        fecha: form.fecha,
-        descripcion: form.descripcion || undefined,
-        categoria_id: form.categoria_id ? Number(form.categoria_id) : null,
-        lugar_id: Number(form.lugar_id),
-      });
-      setForm((f) => ({
-        ...initialState,
-        tipo: f.tipo,
-        lugar_id: f.lugar_id,
-        categoria_id: categorias.length ? String(categorias[0].id) : "",
-      }));
-      onCreated?.();
+      if (editando) {
+        await actualizarMovimiento(movimiento.id, payload);
+        onSaved?.();
+      } else {
+        await crearMovimiento(payload);
+        setForm((f) => ({
+          ...initialState,
+          tipo: f.tipo,
+          lugar_id: f.lugar_id,
+          categoria_id: categorias.length ? String(categorias[0].id) : "",
+        }));
+        onCreated?.();
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -99,7 +117,7 @@ function MovimientoForm({ onCreated }) {
 
   return (
     <form className="movimiento-form" onSubmit={handleSubmit}>
-      <h2>Cargar movimiento</h2>
+      <h2>{editando ? "Editar movimiento" : "Cargar movimiento"}</h2>
 
       <div className="field-row">
         <label>
@@ -223,9 +241,16 @@ function MovimientoForm({ onCreated }) {
 
       {error && <p className="form-error">{error}</p>}
 
-      <button type="submit" disabled={enviando}>
-        {enviando ? "Guardando..." : "Guardar"}
-      </button>
+      <div className="form-actions">
+        <button type="submit" disabled={enviando}>
+          {enviando ? "Guardando..." : editando ? "Guardar cambios" : "Guardar"}
+        </button>
+        {editando && (
+          <button type="button" className="secundario" onClick={onCancel}>
+            Cancelar
+          </button>
+        )}
+      </div>
     </form>
   );
 }
