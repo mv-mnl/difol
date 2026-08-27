@@ -6,7 +6,7 @@ const router = Router();
 
 const TIPOS = ["ingreso", "egreso"];
 
-async function validarMovimiento(body) {
+async function validarMovimiento(body, usuarioId) {
   const { tipo, monto, fecha, lugar_id, categoria_id } = body;
 
   if (!TIPOS.includes(tipo)) {
@@ -25,17 +25,18 @@ async function validarMovimiento(body) {
     return "lugar_id es obligatorio";
   }
 
-  const [lugarRows] = await pool.query("SELECT id FROM lugares WHERE id = ?", [
-    lugar_id,
-  ]);
+  const [lugarRows] = await pool.query(
+    "SELECT id FROM lugares WHERE id = ? AND usuario_id = ?",
+    [lugar_id, usuarioId]
+  );
   if (lugarRows.length === 0) {
     return "el lugar indicado no existe";
   }
 
   if (categoria_id !== undefined && categoria_id !== null) {
     const [catRows] = await pool.query(
-      "SELECT id FROM categorias WHERE id = ? AND tipo = ?",
-      [categoria_id, tipo]
+      "SELECT id FROM categorias WHERE id = ? AND tipo = ? AND usuario_id = ?",
+      [categoria_id, tipo, usuarioId]
     );
     if (catRows.length === 0) {
       return "la categoria indicada no existe o no corresponde al tipo del movimiento";
@@ -52,8 +53,8 @@ router.get("/", async (req, res, next) => {
     if (errorFechas) {
       return res.status(400).json({ error: errorFechas });
     }
-    const condiciones = [];
-    const params = [];
+    const condiciones = ["m.usuario_id = ?"];
+    const params = [req.usuarioId];
 
     if (tipo) {
       if (!TIPOS.includes(tipo)) {
@@ -79,7 +80,7 @@ router.get("/", async (req, res, next) => {
       params.push(lugar_id);
     }
 
-    const where = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
+    const where = `WHERE ${condiciones.join(" AND ")}`;
     const [rows] = await pool.query(
       `SELECT m.*, c.nombre AS categoria_nombre, l.nombre AS lugar_nombre
        FROM movimientos m
@@ -97,15 +98,15 @@ router.get("/", async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
-    const error = await validarMovimiento(req.body);
+    const error = await validarMovimiento(req.body, req.usuarioId);
     if (error) {
       return res.status(400).json({ error });
     }
     const { tipo, monto, fecha, descripcion, categoria_id, lugar_id } = req.body;
     const [result] = await pool.query(
-      `INSERT INTO movimientos (tipo, monto, fecha, descripcion, categoria_id, lugar_id)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [tipo, monto, fecha, descripcion || null, categoria_id || null, lugar_id]
+      `INSERT INTO movimientos (usuario_id, tipo, monto, fecha, descripcion, categoria_id, lugar_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [req.usuarioId, tipo, monto, fecha, descripcion || null, categoria_id || null, lugar_id]
     );
     res.status(201).json({ id: result.insertId, ...req.body });
   } catch (err) {
@@ -115,7 +116,7 @@ router.post("/", async (req, res, next) => {
 
 router.put("/:id", async (req, res, next) => {
   try {
-    const error = await validarMovimiento(req.body);
+    const error = await validarMovimiento(req.body, req.usuarioId);
     if (error) {
       return res.status(400).json({ error });
     }
@@ -123,8 +124,8 @@ router.put("/:id", async (req, res, next) => {
     const [result] = await pool.query(
       `UPDATE movimientos
        SET tipo = ?, monto = ?, fecha = ?, descripcion = ?, categoria_id = ?, lugar_id = ?
-       WHERE id = ?`,
-      [tipo, monto, fecha, descripcion || null, categoria_id || null, lugar_id, req.params.id]
+       WHERE id = ? AND usuario_id = ?`,
+      [tipo, monto, fecha, descripcion || null, categoria_id || null, lugar_id, req.params.id, req.usuarioId]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "movimiento no encontrado" });
@@ -137,9 +138,10 @@ router.put("/:id", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
-    const [result] = await pool.query("DELETE FROM movimientos WHERE id = ?", [
-      req.params.id,
-    ]);
+    const [result] = await pool.query(
+      "DELETE FROM movimientos WHERE id = ? AND usuario_id = ?",
+      [req.params.id, req.usuarioId]
+    );
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "movimiento no encontrado" });
     }

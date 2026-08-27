@@ -84,8 +84,8 @@ router.get("/por-categoria", async (req, res, next) => {
     if (errorFechas) {
       return res.status(400).json({ error: errorFechas });
     }
-    const condiciones = ["m.tipo = ?"];
-    const params = [tipo];
+    const condiciones = ["m.usuario_id = ?", "m.tipo = ?"];
+    const params = [req.usuarioId, tipo];
     if (desde) {
       condiciones.push("m.fecha >= ?");
       params.push(desde);
@@ -126,8 +126,8 @@ router.get("/por-lugar", async (req, res, next) => {
     if (errorFechas) {
       return res.status(400).json({ error: errorFechas });
     }
-    const condiciones = [];
-    const params = [];
+    const condiciones = ["m.usuario_id = ?"];
+    const params = [req.usuarioId];
     if (tipo) {
       if (!TIPOS.includes(tipo)) {
         return res.status(400).json({ error: "tipo debe ser 'ingreso' o 'egreso'" });
@@ -143,7 +143,7 @@ router.get("/por-lugar", async (req, res, next) => {
       condiciones.push("m.fecha <= ?");
       params.push(hasta);
     }
-    const where = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
+    const where = `WHERE ${condiciones.join(" AND ")}`;
     const [rows] = await pool.query(
       `SELECT m.lugar_id, l.nombre AS lugar_nombre, SUM(m.monto) AS total, COUNT(*) AS cantidad
        FROM movimientos m
@@ -165,9 +165,9 @@ router.get("/por-mes", async (req, res, next) => {
     const [rows] = await pool.query(
       `SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes, tipo, SUM(monto) AS total
        FROM movimientos
-       WHERE YEAR(fecha) = ?
+       WHERE usuario_id = ? AND YEAR(fecha) = ?
        GROUP BY mes, tipo`,
-      [anio]
+      [req.usuarioId, anio]
     );
 
     const meses = Array.from({ length: 12 }, (_, i) => {
@@ -195,8 +195,8 @@ router.get("/resumen", async (req, res, next) => {
     if (errorFechas) {
       return res.status(400).json({ error: errorFechas });
     }
-    const condiciones = [];
-    const params = [];
+    const condiciones = ["usuario_id = ?"];
+    const params = [req.usuarioId];
     if (desde) {
       condiciones.push("fecha >= ?");
       params.push(desde);
@@ -205,7 +205,7 @@ router.get("/resumen", async (req, res, next) => {
       condiciones.push("fecha <= ?");
       params.push(hasta);
     }
-    const where = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
+    const where = `WHERE ${condiciones.join(" AND ")}`;
     const [rows] = await pool.query(
       `SELECT tipo, SUM(monto) AS total, COUNT(*) AS cantidad FROM movimientos ${where} GROUP BY tipo`,
       params
@@ -234,9 +234,9 @@ router.get("/serie-mensual", async (req, res, next) => {
     const [rows] = await pool.query(
       `SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes, tipo, SUM(monto) AS total
        FROM movimientos
-       WHERE fecha >= ?
+       WHERE usuario_id = ? AND fecha >= ?
        GROUP BY mes, tipo`,
-      [inicio]
+      [req.usuarioId, inicio]
     );
     const serie = listaMeses(meses).map((mes) => ({ mes, ingresos: 0, egresos: 0 }));
     rows.forEach((r) => {
@@ -265,8 +265,8 @@ router.get("/proyeccion-mes", async (req, res, next) => {
     const diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
     const diasTranscurridos = hoy.getDate();
     const [rows] = await pool.query(
-      `SELECT tipo, SUM(monto) AS total FROM movimientos WHERE fecha >= ? GROUP BY tipo`,
-      [desde]
+      `SELECT tipo, SUM(monto) AS total FROM movimientos WHERE usuario_id = ? AND fecha >= ? GROUP BY tipo`,
+      [req.usuarioId, desde]
     );
     const gastoHastaHoy = Number(rows.find((r) => r.tipo === "egreso")?.total || 0);
     const ingresoHastaHoy = Number(rows.find((r) => r.tipo === "ingreso")?.total || 0);
@@ -300,9 +300,9 @@ router.get("/categoria-evolucion", async (req, res, next) => {
               DATE_FORMAT(m.fecha, '%Y-%m') AS mes, SUM(m.monto) AS total
        FROM movimientos m
        LEFT JOIN categorias c ON c.id = m.categoria_id
-       WHERE m.tipo = ? AND m.fecha >= ?
+       WHERE m.usuario_id = ? AND m.tipo = ? AND m.fecha >= ?
        GROUP BY m.categoria_id, categoria_nombre, mes`,
-      [tipo, inicio]
+      [req.usuarioId, tipo, inicio]
     );
     const mesesLista = listaMeses(meses);
     const porCategoria = new Map();
@@ -336,8 +336,8 @@ router.get("/lugar-categoria", async (req, res, next) => {
     if (errorFechas) {
       return res.status(400).json({ error: errorFechas });
     }
-    const condiciones = [];
-    const params = [];
+    const condiciones = ["m.usuario_id = ?"];
+    const params = [req.usuarioId];
     if (tipo) {
       if (!TIPOS.includes(tipo)) {
         return res.status(400).json({ error: "tipo debe ser 'ingreso' o 'egreso'" });
@@ -353,7 +353,7 @@ router.get("/lugar-categoria", async (req, res, next) => {
       condiciones.push("m.fecha <= ?");
       params.push(hasta);
     }
-    const where = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";
+    const where = `WHERE ${condiciones.join(" AND ")}`;
     const [rows] = await pool.query(
       `SELECT m.lugar_id, l.nombre AS lugar_nombre, m.categoria_id,
               COALESCE(c.nombre, 'Sin categoria') AS categoria_nombre, SUM(m.monto) AS total
@@ -382,8 +382,8 @@ router.get("/habitos", async (req, res, next) => {
       return res.status(400).json({ error: errorFechas });
     }
     const umbralHormiga = Number(req.query.umbralHormiga) || 5;
-    const condiciones = ["tipo = ?"];
-    const params = [tipo];
+    const condiciones = ["usuario_id = ?", "tipo = ?"];
+    const params = [req.usuarioId, tipo];
     if (desde) {
       condiciones.push("fecha >= ?");
       params.push(desde);
@@ -463,18 +463,24 @@ router.get("/calidad", async (req, res, next) => {
       `SELECT COUNT(*) AS total,
               SUM(CASE WHEN descripcion IS NOT NULL AND descripcion <> '' THEN 1 ELSE 0 END) AS conDescripcion,
               SUM(CASE WHEN categoria_id IS NULL THEN 1 ELSE 0 END) AS sinCategoria
-       FROM movimientos`
+       FROM movimientos
+       WHERE usuario_id = ?`,
+      [req.usuarioId]
     );
     const total = Number(totales.total);
     const [lugares] = await pool.query(
       `SELECT l.id, l.nombre, COUNT(m.id) AS cantidad
        FROM lugares l LEFT JOIN movimientos m ON m.lugar_id = l.id
-       GROUP BY l.id, l.nombre ORDER BY cantidad ASC LIMIT 1`
+       WHERE l.usuario_id = ?
+       GROUP BY l.id, l.nombre ORDER BY cantidad ASC LIMIT 1`,
+      [req.usuarioId]
     );
     const [categorias] = await pool.query(
       `SELECT c.id, c.nombre, COUNT(m.id) AS cantidad
        FROM categorias c LEFT JOIN movimientos m ON m.categoria_id = c.id
-       GROUP BY c.id, c.nombre ORDER BY cantidad ASC LIMIT 1`
+       WHERE c.usuario_id = ?
+       GROUP BY c.id, c.nombre ORDER BY cantidad ASC LIMIT 1`,
+      [req.usuarioId]
     );
     res.json({
       totalMovimientos: total,
@@ -504,9 +510,9 @@ router.get("/avanzadas", async (req, res, next) => {
               DATE_FORMAT(m.fecha, '%Y-%m') AS mes, SUM(m.monto) AS total
        FROM movimientos m
        LEFT JOIN categorias c ON c.id = m.categoria_id
-       WHERE m.fecha >= ?
+       WHERE m.usuario_id = ? AND m.fecha >= ?
        GROUP BY m.tipo, m.categoria_id, categoria_nombre, mes`,
-      [inicio]
+      [req.usuarioId, inicio]
     );
 
     // Ratio gasto fijo vs variable (solo egresos, clasificado por nombre de categoria).

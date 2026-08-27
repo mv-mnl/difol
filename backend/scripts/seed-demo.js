@@ -1,5 +1,5 @@
 // Genera ~24 meses de movimientos sinteticos para poder ver las metricas con datos reales.
-// Uso: docker compose exec backend node scripts/seed-demo.js
+// Uso: docker compose exec backend node scripts/seed-demo.js <email-del-usuario>
 import pool from "../src/db.js";
 
 const MESES_HISTORIA = 24;
@@ -28,16 +28,27 @@ function fechaStr(year, month, day) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-async function idsPorNombre(tabla, columnaExtra) {
+async function idsPorNombre(tabla, usuarioId, columnaExtra) {
   const [rows] = await pool.query(
-    `SELECT id, nombre${columnaExtra ? `, ${columnaExtra}` : ""} FROM ${tabla}`
+    `SELECT id, nombre${columnaExtra ? `, ${columnaExtra}` : ""} FROM ${tabla} WHERE usuario_id = ?`,
+    [usuarioId]
   );
   return rows;
 }
 
 async function main() {
-  const categorias = await idsPorNombre("categorias", "tipo");
-  const lugares = await idsPorNombre("lugares");
+  const email = process.argv[2];
+  if (!email) {
+    throw new Error("Uso: node scripts/seed-demo.js <email-del-usuario>");
+  }
+  const [[usuario]] = await pool.query("SELECT id FROM usuarios WHERE email = ?", [email]);
+  if (!usuario) {
+    throw new Error(`No existe un usuario con email ${email}`);
+  }
+  const usuarioId = usuario.id;
+
+  const categorias = await idsPorNombre("categorias", usuarioId, "tipo");
+  const lugares = await idsPorNombre("lugares", usuarioId);
 
   const cat = (nombre) => categorias.find((c) => c.nombre === nombre)?.id;
   const lug = (nombre) => lugares.find((l) => l.nombre === nombre)?.id;
@@ -152,14 +163,16 @@ async function main() {
     }
   }
 
-  await pool.query("DELETE FROM movimientos");
+  await pool.query("DELETE FROM movimientos WHERE usuario_id = ?", [usuarioId]);
 
-  const columnas = ["tipo", "monto", "fecha", "descripcion", "categoria_id", "lugar_id"];
+  const columnas = ["usuario_id", "tipo", "monto", "fecha", "descripcion", "categoria_id", "lugar_id"];
   const batchSize = 200;
   for (let i = 0; i < movimientos.length; i += batchSize) {
     const lote = movimientos.slice(i, i + batchSize);
-    const placeholders = lote.map(() => "(?, ?, ?, ?, ?, ?)").join(", ");
-    const valores = lote.flatMap((mv) => columnas.map((c) => mv[c]));
+    const placeholders = lote.map(() => "(?, ?, ?, ?, ?, ?, ?)").join(", ");
+    const valores = lote.flatMap((mv) =>
+      columnas.map((c) => (c === "usuario_id" ? usuarioId : mv[c]))
+    );
     await pool.query(
       `INSERT INTO movimientos (${columnas.join(", ")}) VALUES ${placeholders}`,
       valores
