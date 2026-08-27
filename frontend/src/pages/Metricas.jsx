@@ -230,7 +230,7 @@ function Metricas() {
       {error && <p className="form-error">{error}</p>}
 
       {/* Seccion 1: flujo general */}
-      <section>
+      <section className="metricas-section">
         <h2>Flujo de dinero — este mes</h2>
         {resumenMes && (
           <div className="stats-grid" style={{ marginTop: 16 }}>
@@ -264,7 +264,7 @@ function Metricas() {
       </section>
 
       {/* Seccion 2 y 3: categoria y lugar */}
-      <section>
+      <section className="metricas-section">
         <div className="metricas-header">
           <h2>Por categoria y lugar</h2>
           <div className="field-row">
@@ -372,13 +372,13 @@ function Metricas() {
         )}
       </section>
 
-      <section>
+      <section className="metricas-section">
         <h2>Evolucion del año en curso</h2>
         {porMes === null ? <p>Cargando...</p> : <MonthlyTrendChart datos={porMes} />}
       </section>
 
       {/* Seccion 4: comportamiento y habitos */}
-      <section>
+      <section className="metricas-section">
         <h2>Comportamiento y habitos ({tipo === "ingreso" ? "ingresos" : "gastos"}, ultimos 12 meses)</h2>
         {habitos === null ? (
           <p>Cargando...</p>
@@ -425,7 +425,7 @@ function Metricas() {
       </section>
 
       {/* Seccion 5: comparativas temporales */}
-      <section>
+      <section className="metricas-section">
         <h2>Comparativas temporales ({tipo === "ingreso" ? "ingresos" : "gastos"})</h2>
         {comparativas ? (
           <div className="stats-grid" style={{ marginTop: 16 }}>
@@ -466,7 +466,7 @@ function Metricas() {
       </section>
 
       {/* Seccion 7: calidad de datos */}
-      <section>
+      <section className="metricas-section">
         <h2>Calidad de datos</h2>
         {calidad === null ? (
           <p>Cargando...</p>
@@ -493,7 +493,7 @@ function Metricas() {
       </section>
 
       {/* Seccion 8: metricas derivadas / avanzadas */}
-      <section>
+      <section className="metricas-section">
         <h2>Metricas avanzadas (24 meses)</h2>
         {avanzadas === null ? (
           <p>Cargando...</p>

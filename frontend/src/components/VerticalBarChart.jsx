@@ -11,9 +11,15 @@ function VerticalBarChart({ items, color, formatValue = formatMoney, emptyText =
 
   const max = Math.max(...items.map((i) => i.total), 1);
 
+  // Con muchas columnas (ej. 31 dias del mes) las etiquetas se solapan si se
+  // muestran todas. En vez de exigir scroll horizontal, se deja que las
+  // barras se angosten libremente y solo se rotulan como maximo ~8 columnas,
+  // siempre incluyendo la primera y la ultima.
+  const paso = Math.max(1, Math.ceil(items.length / 8));
+
   return (
     <div className="vbar-chart" role="img" aria-label="Grafico de barras verticales">
-      {items.map((item) => (
+      {items.map((item, i) => (
         <div className="vbar-col" key={item.label}>
           <div className="vbar-track">
             <span
@@ -25,7 +31,7 @@ function VerticalBarChart({ items, color, formatValue = formatMoney, emptyText =
               }}
             />
           </div>
-          <span className="vbar-label">{item.label}</span>
+          <span className="vbar-label">{i % paso === 0 || i === items.length - 1 ? item.label : ""}</span>
         </div>
       ))}
     </div>

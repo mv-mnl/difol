@@ -1,7 +1,7 @@
 import { INGRESO_COLOR, EGRESO_COLOR } from "../theme/colors.js";
 import { MESES_ABR } from "../utils/fechas.js";
 
-const ALTURA_MAX = 140;
+const ALTURA_MAX = 150; // debe coincidir con la altura de .trend-bars en App.css
 
 function formatMoney(n) {
   return `$${Number(n).toFixed(2)}`;
@@ -14,6 +14,11 @@ function barHeight(value, max) {
 
 function MonthlyTrendChart({ datos }) {
   const max = Math.max(...datos.map((d) => Math.max(d.ingresos, d.egresos)), 1);
+
+  // Igual que en VerticalBarChart: si hubiera muchos meses, se rotulan como
+  // maximo ~8 en vez de solaparlos o exigir scroll horizontal (las barras se
+  // angostan libremente via CSS para caber siempre).
+  const paso = Math.max(1, Math.ceil(datos.length / 8));
 
   return (
     <div className="trend-chart-wrap">
@@ -29,7 +34,7 @@ function MonthlyTrendChart({ datos }) {
       </div>
 
       <div className="trend-chart">
-        {datos.map((d) => (
+        {datos.map((d, i) => (
           <div className="trend-month" key={d.mes}>
             <div className="trend-bars">
               <span
@@ -43,7 +48,9 @@ function MonthlyTrendChart({ datos }) {
                 style={{ height: barHeight(d.egresos, max), background: EGRESO_COLOR }}
               />
             </div>
-            <span className="trend-month-label">{MESES_ABR[Number(d.mes.slice(5, 7)) - 1]}</span>
+            <span className="trend-month-label">
+              {i % paso === 0 || i === datos.length - 1 ? MESES_ABR[Number(d.mes.slice(5, 7)) - 1] : ""}
+            </span>
           </div>
         ))}
       </div>
