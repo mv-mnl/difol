@@ -11,5 +11,13 @@ Se separaron dos responsabilidades que antes vivían juntas en "Cargar movimient
 - `components/MovimientosList.jsx`: acepta `onEdit`/`onDelete` opcionales; si están presentes agrega una columna "Acciones" con esos botones (reutiliza las clases `.settings-actions`/`.secundario` que ya existían para Settings). `CargarMovimiento` no pasa estas props, así que su tabla queda igual que antes (sin columna de acciones).
 - `App.css`: el único agregado es `.movimiento-form .form-actions` (contenedor flex para agrupar "Guardar"/"Guardar cambios" + "Cancelar") y `.movimiento-form button.secundario` (variante gris para "Cancelar"); se movió `align-self: flex-start` del botón a ese contenedor.
 
+## Cambio realizado (2) — overflow de fecha + filtros de categoría y lugar
+El usuario reportó que en la fila de filtros ("Tipo", "Desde", "Hasta") la fecha se salía del contenedor, y pidió sumar filtros por categoría y lugar.
+
+- Causa del overflow: `.field-row` (`App.css`) era `display: flex` sin `flex-wrap`, así que al no entrar los 3 (ahora 5) campos en una sola fila, en vez de bajar de línea el navegador los achicaba forzosamente — y un `<input type="date">` tiene un ancho mínimo interno que no cede, por lo que terminaba recortado/desbordado. Fix: se agregó `flex-wrap: wrap` a `.field-row` y `min-width: 0` a `.field` (para que un flex item pueda encogerse por debajo del ancho de su contenido en vez de imponerlo al padre), más `max-width: 100%; box-sizing: border-box` en `.field input/select` como refuerzo. Con esto, si no entran todos los campos en el ancho disponible, los que sobran bajan a una segunda línea en vez de desbordar.
+- `pages/Movimientos.jsx`: se agregaron los selects "Categoria" y "Lugar" a la fila de filtros. "Lugar" lista todos los lugares (`getLugares()`, se pide una sola vez). "Categoria" se re-pide con `getCategorias(tipo)` cada vez que cambia el filtro "Tipo" (así solo se listan categorías del tipo elegido; sin tipo elegido trae todas, ingreso y egreso mezcladas — ya es el comportamiento del endpoint); si la categoría seleccionada deja de estar en la lista nueva (cambió el tipo) se resetea el filtro a "Todas" en vez de quedar en un id que ya no aplica.
+- `api.js`: `getMovimientos` ahora también manda `categoria_id`/`lugar_id` en el querystring.
+- `src/routes/movimientos.routes.js` (backend): se agregó soporte para `?categoria_id=`/`?lugar_id=` en `GET /api/movimientos` — no existía antes, ver `documentacion/backend/fix-filtros-movimientos.md`.
+
 ## Próximo cambio
-- Ninguno previsto. Pendiente que el usuario pruebe editar/eliminar contra la base real.
+- Ninguno previsto. Pendiente que el usuario confirme visualmente que la fila de filtros ya no desborda y que los nuevos filtros funcionan contra la base real.
