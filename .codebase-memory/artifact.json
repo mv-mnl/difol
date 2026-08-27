@@ -1,11 +1,11 @@
 {
     "schema_version": 2,
-    "commit": "8644a126f2ed8c45cf6e77195fb2fa9cf51b3b33",
-    "indexed_at": "2026-08-27T19:44:33Z",
+    "commit": "a316997099f986bb8db0a63d03f780c97aa5f6bb",
+    "indexed_at": "2026-08-27T19:49:11Z",
     "project": "home-mn-mnl-Proyectos-difol",
-    "nodes": 554,
-    "edges": 826,
+    "nodes": 560,
+    "edges": 831,
     "original_size": 2752512,
-    "compressed_size": 371302,
+    "compressed_size": 372413,
     "compression_level": 3
 }

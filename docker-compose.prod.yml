@@ -32,8 +32,6 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-difol}
       DB_NAME: ${DB_NAME:-difol}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET es obligatorio en produccion}
-    ports:
-      - "4000:4000"
     volumes:
       - ./database:/app/database:ro
     depends_on:
@@ -46,10 +44,20 @@ services:
       dockerfile: Dockerfile.prod
     image: difol-frontend-prod
     restart: unless-stopped
-    ports:
-      - "8080:80"
     depends_on:
       - backend
+
+  # Todo el trafico entra por el tunnel de Cloudflare, no hay puertos publicados
+  # al host: ni backend ni frontend son alcanzables salvo a traves de este tunel
+  # (el hostname publico se mapea a http://frontend:80 desde el dashboard de
+  # Cloudflare Zero Trust; nginx en el frontend ya proxea /api/ al backend, asi
+  # que un solo hostname alcanza para toda la app).
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN es obligatorio} --protocol http2
+    depends_on:
+      - frontend
 
 volumes:
   mysql_data:
