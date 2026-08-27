@@ -47,7 +47,7 @@ async function validarMovimiento(body) {
 
 router.get("/", async (req, res, next) => {
   try {
-    const { tipo, desde, hasta } = req.query;
+    const { tipo, desde, hasta, categoria_id, lugar_id } = req.query;
     const errorFechas = validarRangoFechas({ desde, hasta });
     if (errorFechas) {
       return res.status(400).json({ error: errorFechas });
@@ -69,6 +69,14 @@ router.get("/", async (req, res, next) => {
     if (hasta) {
       condiciones.push("m.fecha <= ?");
       params.push(hasta);
+    }
+    if (categoria_id) {
+      condiciones.push("m.categoria_id = ?");
+      params.push(categoria_id);
+    }
+    if (lugar_id) {
+      condiciones.push("m.lugar_id = ?");
+      params.push(lugar_id);
     }
 
     const where = condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "";

@@ -129,6 +129,7 @@ body {
 
 .field-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
 }
 
@@ -138,10 +139,13 @@ body {
   gap: 4px;
   font-size: 0.875rem;
   color: #52586a;
+  min-width: 0;
 }
 
 .field input,
 .field select {
+  box-sizing: border-box;
+  max-width: 100%;
   padding: 8px 10px;
   border: 1px solid #cdd2db;
   border-radius: 6px;

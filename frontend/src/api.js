@@ -50,9 +50,9 @@ export function eliminarCategoria(id) {
   return fetch(`${API_URL}/api/categorias/${id}`, { method: "DELETE" }).then(handle);
 }
 
-export function getMovimientos({ tipo, desde, hasta } = {}) {
+export function getMovimientos({ tipo, desde, hasta, categoria_id, lugar_id } = {}) {
   return fetch(
-    `${API_URL}/api/movimientos${buildQuery({ tipo, desde, hasta })}`
+    `${API_URL}/api/movimientos${buildQuery({ tipo, desde, hasta, categoria_id, lugar_id })}`
   ).then(handle);
 }
 
