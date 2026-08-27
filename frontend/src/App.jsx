@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Dashboard from "./pages/Dashboard.jsx";
 import CargarMovimiento from "./pages/CargarMovimiento.jsx";
+import Movimientos from "./pages/Movimientos.jsx";
 import Metricas from "./pages/Metricas.jsx";
 import Settings from "./pages/Settings.jsx";
 import "./App.css";
@@ -8,6 +9,7 @@ import "./App.css";
 const TABS = [
   { id: "dashboard", label: "Dashboard" },
   { id: "carga", label: "Cargar movimiento" },
+  { id: "movimientos", label: "Movimientos" },
   { id: "metricas", label: "Metricas" },
   { id: "settings", label: "Settings" },
 ];
@@ -35,6 +37,7 @@ function App() {
       <main>
         {tab === "dashboard" && <Dashboard />}
         {tab === "carga" && <CargarMovimiento />}
+        {tab === "movimientos" && <Movimientos />}
         {tab === "metricas" && <Metricas />}
         {tab === "settings" && <Settings />}
       </main>

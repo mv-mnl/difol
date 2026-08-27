@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import MovimientoForm from "../components/MovimientoForm.jsx";
 import MovimientosList from "../components/MovimientosList.jsx";
 import { getMovimientos } from "../api.js";
+import { hoy } from "../utils/fechas.js";
 
 function CargarMovimiento() {
   const [movimientos, setMovimientos] = useState([]);
@@ -10,7 +11,8 @@ function CargarMovimiento() {
 
   const cargarMovimientos = useCallback(() => {
     setLoading(true);
-    getMovimientos()
+    const fecha = hoy();
+    getMovimientos({ desde: fecha, hasta: fecha })
       .then(setMovimientos)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -25,7 +27,7 @@ function CargarMovimiento() {
       <MovimientoForm onCreated={cargarMovimientos} />
 
       <section className="movimientos-section">
-        <h2>Movimientos recientes</h2>
+        <h2>Movimientos de hoy</h2>
         {error && <p className="form-error">{error}</p>}
         <MovimientosList movimientos={movimientos} loading={loading} />
       </section>
