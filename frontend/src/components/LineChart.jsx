@@ -1,3 +1,5 @@
+import { INGRESO_COLOR, EGRESO_COLOR } from "../theme/colors.js";
+
 function formatMoney(n) {
   return `$${Number(n).toFixed(2)}`;
 }
@@ -22,6 +24,13 @@ function LineChart({ labels, series, formatValue = formatMoney, mostrarCero = fa
 
   const puntos = (values) =>
     values.map((v, i) => `${leftPct(i)},${topPct(v)}`).join(" ");
+
+  // Con series largas (ej. 24 meses) no entran todas las etiquetas del eje X
+  // en el ancho de un movil sin solaparse. En vez de exigir scroll horizontal,
+  // se muestra como maximo ~8, siempre incluyendo la primera y la ultima; los
+  // puntos y la linea se dibujan completos igual, solo se reduce el rotulado.
+  const paso = Math.max(1, Math.ceil(labels.length / 8));
+  const mostrarEtiqueta = (i) => i % paso === 0 || i === labels.length - 1;
 
   return (
     <div className="linechart-wrap">
@@ -53,7 +62,9 @@ function LineChart({ labels, series, formatValue = formatMoney, mostrarCero = fa
               points={puntos(s.values)}
               fill="none"
               stroke={s.color}
-              strokeWidth="1.2"
+              strokeWidth="2"
+              strokeLinejoin="round"
+              strokeLinecap="round"
               strokeDasharray={s.punteada ? "3,2" : undefined}
               vectorEffect="non-scaling-stroke"
             />
@@ -69,7 +80,7 @@ function LineChart({ labels, series, formatValue = formatMoney, mostrarCero = fa
               style={{
                 left: `${leftPct(i)}%`,
                 top: `${topPct(v)}%`,
-                background: s.colorPorSigno ? (v >= 0 ? "#1baf7a" : "#c0392b") : s.color,
+                background: s.colorPorSigno ? (v >= 0 ? INGRESO_COLOR : EGRESO_COLOR) : s.color,
               }}
             />
           ))
@@ -77,9 +88,14 @@ function LineChart({ labels, series, formatValue = formatMoney, mostrarCero = fa
       </div>
 
       <div className="linechart-labels">
-        {labels.map((l) => (
-          <span key={l}>{l}</span>
-        ))}
+        {labels.map(
+          (l, i) =>
+            mostrarEtiqueta(i) && (
+              <span key={l} style={{ left: `${leftPct(i)}%` }}>
+                {l}
+              </span>
+            )
+        )}
       </div>
     </div>
   );

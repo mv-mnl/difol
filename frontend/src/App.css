@@ -99,12 +99,16 @@ body {
   color: #898f9e;
 }
 
+/* Texto de balance: usa tonos de "delta" con buen contraste (>=4.5:1 sobre
+   fondo claro), no el verde/rojo de las marcas de los graficos (ese es mas
+   claro/suave a proposito para no gritar como bloque de color, y confia en
+   que el valor siempre va acompañado de una etiqueta). */
 .amount.positivo {
-  color: #1baf7a;
+  color: #006300;
 }
 
 .amount.negativo {
-  color: #c0392b;
+  color: #d03b3b;
 }
 
 .movimiento-form {
@@ -248,11 +252,11 @@ body {
 }
 
 .movimientos-list .tipo-ingreso .monto {
-  color: #1baf7a;
+  color: #006300;
 }
 
 .movimientos-list .tipo-egreso .monto {
-  color: #c0392b;
+  color: #d03b3b;
 }
 
 /* Metricas */
@@ -263,7 +267,7 @@ body {
   gap: 32px;
 }
 
-.metricas section {
+.metricas-section {
   background: #fff;
   border: 1px solid #e2e5ea;
   border-radius: 10px;
@@ -285,6 +289,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -295,7 +300,7 @@ body {
 
 .metricas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
   gap: 24px;
 }
 
@@ -309,7 +314,7 @@ body {
 .bar-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .bar-row {
@@ -321,7 +326,7 @@ body {
 }
 
 .bar-label {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: #52586a;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -331,19 +336,21 @@ body {
 .bar-track {
   background: #eef0f3;
   border-radius: 4px;
-  height: 10px;
+  height: 14px;
   overflow: hidden;
 }
 
 .bar-fill {
   display: block;
   height: 100%;
-  border-radius: 4px;
+  /* Redondeado solo en la punta (el extremo del dato); recto contra el eje
+     (la base, a la izquierda), como pide la guia de marcas de barra. */
+  border-radius: 0 4px 4px 0;
   min-width: 4px;
 }
 
 .bar-value {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
   text-align: right;
   color: #1c232b;
@@ -396,8 +403,8 @@ body {
 .trend-chart {
   display: flex;
   align-items: flex-end;
-  gap: 6px;
-  height: 160px;
+  gap: 8px;
+  height: 176px;
   border-bottom: 1px solid #e2e5ea;
   padding-bottom: 4px;
 }
@@ -408,19 +415,25 @@ body {
   align-items: center;
   gap: 6px;
   flex: 1;
+  min-width: 0;
 }
 
 .trend-bars {
   display: flex;
   align-items: flex-end;
-  gap: 3px;
-  height: 140px;
+  justify-content: center;
+  gap: 4px;
+  height: 150px;
+  width: 100%;
 }
 
 .trend-bar {
   position: relative;
-  width: 10px;
-  border-radius: 3px 3px 0 0;
+  flex: 0 1 14px;
+  min-width: 4px;
+  /* Redondeado en la punta (arriba, el extremo del dato); recto contra la
+     linea base de abajo. */
+  border-radius: 4px 4px 0 0;
 }
 
 .trend-bar[data-tooltip]:hover::after {
@@ -441,31 +454,33 @@ body {
 }
 
 .trend-month-label {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: #898f9e;
+  white-space: nowrap;
 }
 
 /* StatTile */
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
   gap: 12px;
 }
 
 .stat-tile {
   background: #f5f6f8;
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
 .stat-tile-value {
-  font-size: 1.25rem;
+  font-size: 1.375rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  /* Numero grande y suelto (figura proporcional), no de columna: tabular-nums
+     es para filas de tabla / ticks de eje que deben alinear digito a digito. */
 }
 
 .stat-tile-sub {
@@ -492,11 +507,11 @@ body {
 }
 
 .comparativa-variacion.positivo {
-  color: #1baf7a;
+  color: #006300;
 }
 
 .comparativa-variacion.negativo {
-  color: #c0392b;
+  color: #d03b3b;
 }
 
 /* VerticalBarChart */
@@ -504,8 +519,8 @@ body {
 .vbar-chart {
   display: flex;
   align-items: flex-end;
-  gap: 3px;
-  height: 120px;
+  gap: 4px;
+  height: 140px;
 }
 
 .vbar-col {
@@ -514,13 +529,14 @@ body {
   align-items: center;
   gap: 4px;
   flex: 1;
+  min-width: 0;
   height: 100%;
   justify-content: flex-end;
 }
 
 .vbar-track {
   width: 100%;
-  height: 100px;
+  height: 120px;
   display: flex;
   align-items: flex-end;
 }
@@ -528,8 +544,9 @@ body {
 .vbar-fill {
   position: relative;
   width: 100%;
-  min-width: 3px;
-  border-radius: 2px 2px 0 0;
+  min-width: 4px;
+  /* Redondeado en la punta (arriba); recto contra la base. */
+  border-radius: 4px 4px 0 0;
 }
 
 .vbar-fill[data-tooltip]:hover::after {
@@ -550,8 +567,9 @@ body {
 }
 
 .vbar-label {
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   color: #898f9e;
+  white-space: nowrap;
 }
 
 /* LineChart */
@@ -564,7 +582,7 @@ body {
 
 .linechart {
   position: relative;
-  height: 160px;
+  height: 180px;
 }
 
 .linechart-svg {
@@ -574,17 +592,18 @@ body {
   height: 100%;
 }
 
+/* Hairline solida, nunca punteada: una grilla/eje discontinuo llama la
+   atencion que le corresponde a los datos, no a la referencia. */
 .linechart-zero-line {
   stroke: #cdd2db;
-  stroke-width: 0.5;
-  stroke-dasharray: 2, 2;
+  stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
 .linechart-dot {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   border: 2px solid #fff;
@@ -608,10 +627,25 @@ body {
 }
 
 .linechart-labels {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 14px;
   font-size: 0.6875rem;
   color: #898f9e;
+}
+
+.linechart-labels span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.linechart-labels span:first-child {
+  transform: translateX(0);
+}
+
+.linechart-labels span:last-child {
+  transform: translateX(-100%);
 }
 
 /* Heatmap */
@@ -663,7 +697,7 @@ body {
 
 .anomalias-list li {
   background: #fdf1ef;
-  border-left: 3px solid #c0392b;
+  border-left: 3px solid #d03b3b;
   border-radius: 4px;
   padding: 8px 12px;
   font-size: 0.8125rem;
@@ -750,4 +784,21 @@ body {
   color: #fff;
   font-size: 0.875rem;
   cursor: pointer;
+}
+
+/* Mobile */
+
+@media (max-width: 480px) {
+  .app {
+    padding: 16px 12px 40px;
+  }
+
+  .metricas-section {
+    padding: 16px 14px;
+  }
+
+  .bar-row {
+    grid-template-columns: 72px 1fr 64px;
+    gap: 8px;
+  }
 }

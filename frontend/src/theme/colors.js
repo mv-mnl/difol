@@ -1,7 +1,12 @@
 export const CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a"];
 export const OTHER_COLOR = "#9a9a94";
+// Colores de marca (barras, puntos, lineas) para ingreso/egreso. Distintos de
+// los tonos usados para TEXTO de balance (ver .amount.positivo/.negativo en
+// App.css): un verde/rojo mas suave funciona como relleno de grafico porque
+// siempre va acompañado de una etiqueta con el valor, pero como texto solo
+// (sin fondo ni etiqueta al lado) no llega al contraste minimo legible.
 export const INGRESO_COLOR = "#1baf7a";
-export const EGRESO_COLOR = "#c0392b";
+export const EGRESO_COLOR = "#d03b3b";
 
 function hexToRgb(hex) {
   const n = parseInt(hex.replace("#", ""), 16);
