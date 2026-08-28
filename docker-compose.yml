@@ -7,6 +7,7 @@ services:
       MYSQL_DATABASE: ${DB_NAME:-difol}
       MYSQL_USER: ${DB_USER:-difol}
       MYSQL_PASSWORD: ${DB_PASSWORD:-difol}
+      TZ: ${TZ:-America/El_Salvador}
     ports:
       - "3307:3306"
     volumes:
@@ -30,6 +31,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-difol}
       DB_NAME: ${DB_NAME:-difol}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-cambiar-en-produccion}
+      TZ: ${TZ:-America/El_Salvador}
     ports:
       - "4000:4000"
     volumes:
