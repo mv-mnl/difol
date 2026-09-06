@@ -9,7 +9,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD:-difol}
       TZ: ${TZ:-America/El_Salvador}
     ports:
-      - "3307:3306"
+      - "${MYSQL_PORT:-3308}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -33,7 +33,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-dev-secret-cambiar-en-produccion}
       TZ: ${TZ:-America/El_Salvador}
     ports:
-      - "4000:4000"
+      - "${BACKEND_PORT:-4000}:4000"
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -46,7 +46,7 @@ services:
     build: ./frontend
     restart: unless-stopped
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
