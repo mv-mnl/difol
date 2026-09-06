@@ -23,7 +23,9 @@ import {
 } from "../api.js";
 import { buildColorMap } from "../theme/colors.js";
 import { INGRESO_COLOR, EGRESO_COLOR } from "../theme/colors.js";
-import { primerDiaDelMes, primerDiaHaceMeses, hoy, MESES_ABR } from "../utils/fechas.js";
+import { primerDiaHaceMeses, hoy, MESES_ABR, PERIODOS, rangoPeriodo } from "../utils/fechas.js";
+
+const VENTANAS = [6, 12, 24, 36];
 
 function formatMoney(n) {
   return `$${Number(n).toFixed(2)}`;
@@ -48,6 +50,12 @@ function promedioMovil(valores, ventana) {
 function Metricas() {
   const [tipo, setTipo] = useState("egreso");
   const [error, setError] = useState(null);
+
+  // Filtros globales: periodo puntual (secciones "foto") y ventana de tendencia (secciones de evolucion).
+  const [periodo, setPeriodo] = useState("mes");
+  const [desdePersonalizado, setDesdePersonalizado] = useState("");
+  const [hastaPersonalizado, setHastaPersonalizado] = useState("");
+  const [ventana, setVentana] = useState(12);
 
   // Seccion 1: flujo general
   const [resumenMes, setResumenMes] = useState(null);
@@ -77,8 +85,20 @@ function Metricas() {
   // Seccion 8: avanzadas
   const [avanzadas, setAvanzadas] = useState(null);
 
-  const desdeMes = primerDiaDelMes();
-  const hastaHoy = hoy();
+  // Rango de la seccion "foto" (resumen, por categoria/lugar, heatmap): sigue al selector de periodo.
+  const { desde, hasta } = useMemo(() => {
+    if (periodo === "personalizado") {
+      return { desde: desdePersonalizado || undefined, hasta: hastaPersonalizado || hoy() };
+    }
+    return rangoPeriodo(periodo);
+  }, [periodo, desdePersonalizado, hastaPersonalizado]);
+
+  const periodoLabel = useMemo(() => {
+    if (periodo === "personalizado") {
+      return desde ? `${desde} a ${hasta}` : "Personalizado";
+    }
+    return PERIODOS.find((p) => p.key === periodo)?.label ?? "";
+  }, [periodo, desde, hasta]);
 
   useEffect(() => {
     getLugares()
@@ -87,26 +107,23 @@ function Metricas() {
     getMetricasPorMes(new Date().getFullYear())
       .then(setPorMes)
       .catch((err) => setError(err.message));
-    getMetricasResumen({ desde: desdeMes, hasta: hastaHoy })
-      .then(setResumenMes)
-      .catch((err) => setError(err.message));
     getMetricasProyeccionMes()
       .then(setProyeccion)
-      .catch((err) => setError(err.message));
-    getMetricasSerieMensual(24)
-      .then(setSerieMensual)
       .catch((err) => setError(err.message));
     getMetricasCalidad()
       .then(setCalidad)
       .catch((err) => setError(err.message));
-    getMetricasAvanzadas(24)
-      .then(setAvanzadas)
-      .catch((err) => setError(err.message));
     getMetricasPorLugar({ tipo: "egreso" })
       .then(setLugaresTotales)
       .catch((err) => setError(err.message));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Secciones "foto": reaccionan al periodo elegido (y al tipo cuando aplica).
+  useEffect(() => {
+    getMetricasResumen({ desde, hasta })
+      .then(setResumenMes)
+      .catch((err) => setError(err.message));
+  }, [desde, hasta]);
 
   useEffect(() => {
     getCategorias(tipo)
@@ -119,7 +136,7 @@ function Metricas() {
       })
       .catch((err) => setError(err.message));
 
-    getMetricasPorCategoria({ tipo, desde: desdeMes, hasta: hastaHoy })
+    getMetricasPorCategoria({ tipo, desde, hasta })
       .then((data) =>
         setPorCategoria(
           data.map((d) => ({ id: d.categoria_id, label: d.categoria_nombre, total: d.total }))
@@ -127,25 +144,38 @@ function Metricas() {
       )
       .catch((err) => setError(err.message));
 
-    getMetricasPorLugar({ tipo, desde: desdeMes, hasta: hastaHoy })
+    getMetricasPorLugar({ tipo, desde, hasta })
       .then((data) =>
         setPorLugar(data.map((d) => ({ id: d.lugar_id, label: d.lugar_nombre, total: d.total })))
       )
       .catch((err) => setError(err.message));
 
-    getMetricasCategoriaEvolucion({ tipo, meses: 12 })
+    getMetricasLugarCategoria({ tipo, desde, hasta })
+      .then(setLugarCategoria)
+      .catch((err) => setError(err.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipo, desde, hasta]);
+
+  // Secciones de tendencia: reaccionan a la ventana elegida (y al tipo cuando aplica).
+  useEffect(() => {
+    getMetricasSerieMensual(ventana)
+      .then(setSerieMensual)
+      .catch((err) => setError(err.message));
+    getMetricasAvanzadas(ventana)
+      .then(setAvanzadas)
+      .catch((err) => setError(err.message));
+  }, [ventana]);
+
+  useEffect(() => {
+    getMetricasCategoriaEvolucion({ tipo, meses: ventana })
       .then(setCategoriaEvolucion)
       .catch((err) => setError(err.message));
 
-    getMetricasLugarCategoria({ tipo, desde: desdeMes, hasta: hastaHoy })
-      .then(setLugarCategoria)
-      .catch((err) => setError(err.message));
-
-    getMetricasHabitos({ tipo, desde: primerDiaHaceMeses(12), hasta: hastaHoy })
+    getMetricasHabitos({ tipo, desde: primerDiaHaceMeses(ventana), hasta: hoy() })
       .then(setHabitos)
       .catch((err) => setError(err.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tipo]);
+  }, [tipo, ventana]);
 
   const comparativas = useMemo(() => {
     if (!serieMensual || serieMensual.length < 2) return null;
@@ -229,9 +259,45 @@ function Metricas() {
     <div className="metricas">
       {error && <p className="form-error">{error}</p>}
 
-      {/* Seccion 1: flujo general */}
+      <div className="metricas-grupo-header">
+        <h2 className="metricas-grupo">Depende del Periodo</h2>
+        <div className="field-row">
+          <label className="field">
+            Periodo
+            <select value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
+              {PERIODOS.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {periodo === "personalizado" && (
+            <>
+              <label className="field">
+                Desde
+                <input
+                  type="date"
+                  value={desdePersonalizado}
+                  onChange={(e) => setDesdePersonalizado(e.target.value)}
+                />
+              </label>
+              <label className="field">
+                Hasta
+                <input
+                  type="date"
+                  value={hastaPersonalizado}
+                  onChange={(e) => setHastaPersonalizado(e.target.value)}
+                />
+              </label>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Flujo general: resumen del periodo elegido */}
       <section className="metricas-section">
-        <h2>Flujo de dinero — este mes</h2>
+        <h2>Flujo de dinero — {periodoLabel}</h2>
         {resumenMes && (
           <div className="stats-grid" style={{ marginTop: 16 }}>
             <StatTile label="Ingresos" value={formatMoney(resumenMes.ingresos)} />
@@ -243,27 +309,16 @@ function Metricas() {
             />
             {proyeccion && (
               <StatTile
-                label="Proyeccion de gasto del mes"
+                label="Proyeccion de gasto (mes en curso)"
                 value={formatMoney(proyeccion.proyeccionGasto)}
                 sub={`Dia ${proyeccion.diasTranscurridos} de ${proyeccion.diasEnMes}`}
               />
             )}
           </div>
         )}
-
-        <h3 style={{ marginTop: 24 }}>Balance acumulado (24 meses)</h3>
-        {serieMensual === null ? (
-          <p>Cargando...</p>
-        ) : (
-          <LineChart
-            labels={serieMensual.map((m) => mesLabel(m.mes))}
-            series={[{ label: "Balance acumulado", color: "#1c232b", values: serieMensual.map((m) => m.balanceAcumulado), colorPorSigno: true }]}
-            mostrarCero
-          />
-        )}
       </section>
 
-      {/* Seccion 2 y 3: categoria y lugar */}
+      {/* Por categoria y lugar del periodo elegido */}
       <section className="metricas-section">
         <div className="metricas-header">
           <h2>Por categoria y lugar</h2>
@@ -291,7 +346,7 @@ function Metricas() {
           </div>
         </div>
 
-        <p className="settings-hint">Este mes, por categoria y lugar.</p>
+        <p className="settings-hint">{periodoLabel}, por categoria y lugar.</p>
         <div className="metricas-grid">
           <div>
             <h3>Por categoria</h3>
@@ -313,8 +368,56 @@ function Metricas() {
             )}
           </div>
         </div>
+      </section>
 
-        <h3 style={{ marginTop: 24 }}>Evolucion de una categoria (12 meses)</h3>
+      {/* Heatmap categoria x lugar del periodo elegido */}
+      <section className="metricas-section">
+        <h2>Distribucion de categorias por lugar ({periodoLabel})</h2>
+        {lugarCategoria === null ? (
+          <p>Cargando...</p>
+        ) : (
+          <Heatmap
+            filas={lugarCategoriaFilas}
+            columnas={lugarCategoriaColumnas}
+            datos={lugarCategoria}
+            colorBase={tipo === "ingreso" ? INGRESO_COLOR : EGRESO_COLOR}
+          />
+        )}
+      </section>
+
+      <div className="metricas-grupo-header">
+        <h2 className="metricas-grupo">Depende de la Ventana</h2>
+        <div className="field-row">
+          <label className="field">
+            Ventana de tendencia
+            <select value={ventana} onChange={(e) => setVentana(Number(e.target.value))}>
+              {VENTANAS.map((v) => (
+                <option key={v} value={v}>
+                  {v} meses
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
+
+      {/* Balance acumulado: tendencia de N meses */}
+      <section className="metricas-section">
+        <h2>Balance acumulado ({ventana} meses)</h2>
+        {serieMensual === null ? (
+          <p>Cargando...</p>
+        ) : (
+          <LineChart
+            labels={serieMensual.map((m) => mesLabel(m.mes))}
+            series={[{ label: "Balance acumulado", color: "#1c232b", values: serieMensual.map((m) => m.balanceAcumulado), colorPorSigno: true }]}
+            mostrarCero
+          />
+        )}
+      </section>
+
+      {/* Evolucion de una categoria: tendencia de N meses */}
+      <section className="metricas-section">
+        <h2>Evolucion de una categoria ({ventana} meses)</h2>
         <div className="field" style={{ marginBottom: 12, maxWidth: 260 }}>
           <select
             value={categoriaSeleccionada ?? ""}
@@ -345,41 +448,13 @@ function Metricas() {
             {formatPct(calidad.porcentajeSinCategoria)} de los movimientos estan sin categoria.
           </p>
         )}
-
-        <h3 style={{ marginTop: 24 }}>Distribucion de categorias por lugar (este mes)</h3>
-        {lugarCategoria === null ? (
-          <p>Cargando...</p>
-        ) : (
-          <Heatmap
-            filas={lugarCategoriaFilas}
-            columnas={lugarCategoriaColumnas}
-            datos={lugarCategoria}
-            colorBase={tipo === "ingreso" ? INGRESO_COLOR : EGRESO_COLOR}
-          />
-        )}
-
-        {porcentajeEfectivo && (
-          <div className="stats-grid" style={{ marginTop: 16 }}>
-            <StatTile label="% en efectivo" value={formatPct(porcentajeEfectivo.pct)} sub="Historico, todos los gastos" />
-            {porcentajeEfectivo.masUsado && (
-              <StatTile
-                label="Cuenta mas usada"
-                value={porcentajeEfectivo.masUsado.lugar_nombre}
-                sub={`${porcentajeEfectivo.masUsado.cantidad} movimientos`}
-              />
-            )}
-          </div>
-        )}
-      </section>
-
-      <section className="metricas-section">
-        <h2>Evolucion del año en curso</h2>
-        {porMes === null ? <p>Cargando...</p> : <MonthlyTrendChart datos={porMes} />}
       </section>
 
       {/* Seccion 4: comportamiento y habitos */}
       <section className="metricas-section">
-        <h2>Comportamiento y habitos ({tipo === "ingreso" ? "ingresos" : "gastos"}, ultimos 12 meses)</h2>
+        <h2>
+          Comportamiento y habitos ({tipo === "ingreso" ? "ingresos" : "gastos"}, ultimos {ventana} meses)
+        </h2>
         {habitos === null ? (
           <p>Cargando...</p>
         ) : (
@@ -465,36 +540,9 @@ function Metricas() {
         )}
       </section>
 
-      {/* Seccion 7: calidad de datos */}
-      <section className="metricas-section">
-        <h2>Calidad de datos</h2>
-        {calidad === null ? (
-          <p>Cargando...</p>
-        ) : (
-          <div className="stats-grid" style={{ marginTop: 16 }}>
-            <StatTile label="Con descripcion" value={formatPct(calidad.porcentajeConDescripcion)} />
-            <StatTile label="Sin categoria" value={formatPct(calidad.porcentajeSinCategoria)} />
-            {calidad.lugarMenosUsado && (
-              <StatTile
-                label="Lugar menos usado"
-                value={calidad.lugarMenosUsado.nombre}
-                sub={`${calidad.lugarMenosUsado.cantidad} movimientos`}
-              />
-            )}
-            {calidad.categoriaMenosUsada && (
-              <StatTile
-                label="Categoria menos usada"
-                value={calidad.categoriaMenosUsada.nombre}
-                sub={`${calidad.categoriaMenosUsada.cantidad} movimientos`}
-              />
-            )}
-          </div>
-        )}
-      </section>
-
       {/* Seccion 8: metricas derivadas / avanzadas */}
       <section className="metricas-section">
-        <h2>Metricas avanzadas (24 meses)</h2>
+        <h2>Metricas avanzadas ({ventana} meses)</h2>
         {avanzadas === null ? (
           <p>Cargando...</p>
         ) : (
@@ -541,6 +589,57 @@ function Metricas() {
               </ul>
             )}
           </>
+        )}
+      </section>
+
+      <div className="metricas-grupo-header">
+        <h2 className="metricas-grupo">Sin filtro (histórico completo / año calendario)</h2>
+      </div>
+
+      <section className="metricas-section">
+        <h2>Evolucion del año en curso</h2>
+        {porMes === null ? <p>Cargando...</p> : <MonthlyTrendChart datos={porMes} />}
+      </section>
+
+      <section className="metricas-section">
+        <h2>Uso de lugares</h2>
+        {porcentajeEfectivo && (
+          <div className="stats-grid" style={{ marginTop: 16 }}>
+            <StatTile label="% en efectivo" value={formatPct(porcentajeEfectivo.pct)} sub="Historico, todos los gastos" />
+            {porcentajeEfectivo.masUsado && (
+              <StatTile
+                label="Cuenta mas usada"
+                value={porcentajeEfectivo.masUsado.lugar_nombre}
+                sub={`${porcentajeEfectivo.masUsado.cantidad} movimientos`}
+              />
+            )}
+          </div>
+        )}
+      </section>
+
+      <section className="metricas-section">
+        <h2>Calidad de datos</h2>
+        {calidad === null ? (
+          <p>Cargando...</p>
+        ) : (
+          <div className="stats-grid" style={{ marginTop: 16 }}>
+            <StatTile label="Con descripcion" value={formatPct(calidad.porcentajeConDescripcion)} />
+            <StatTile label="Sin categoria" value={formatPct(calidad.porcentajeSinCategoria)} />
+            {calidad.lugarMenosUsado && (
+              <StatTile
+                label="Lugar menos usado"
+                value={calidad.lugarMenosUsado.nombre}
+                sub={`${calidad.lugarMenosUsado.cantidad} movimientos`}
+              />
+            )}
+            {calidad.categoriaMenosUsada && (
+              <StatTile
+                label="Categoria menos usada"
+                value={calidad.categoriaMenosUsada.nombre}
+                sub={`${calidad.categoriaMenosUsada.cantidad} movimientos`}
+              />
+            )}
+          </div>
         )}
       </section>
     </div>

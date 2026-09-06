@@ -369,6 +369,34 @@ body {
   margin-bottom: 16px;
 }
 
+/* Encabezado de grupo (Periodo / Ventana / Sin filtro): separa visualmente tandas de secciones,
+   no es el titulo de una tarjeta individual. Selector ".metricas .metricas-grupo" (dos clases) para
+   pisar la especificidad de ".metricas h2" (clase + tag). */
+.metricas .metricas-grupo {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7180;
+}
+
+/* Contenedor del encabezado de grupo cuando trae el selector del filtro al lado (Periodo, Ventana). */
+.metricas-grupo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 0 -16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #d7dbe2;
+}
+
+.metricas-grupo-header .field-row {
+  gap: 16px;
+}
+
 .metricas-header .field-row {
   gap: 16px;
 }

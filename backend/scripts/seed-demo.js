@@ -1,8 +1,6 @@
-// Genera ~24 meses de movimientos sinteticos para poder ver las metricas con datos reales.
-// Uso: docker compose exec backend node scripts/seed-demo.js <email-del-usuario>
+// Genera movimientos sinteticos para poder ver las metricas con datos reales.
+// Uso: docker compose exec backend node scripts/seed-demo.js <email-del-usuario> [meses-de-historia]
 import pool from "../src/db.js";
-
-const MESES_HISTORIA = 24;
 
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -39,8 +37,9 @@ async function idsPorNombre(tabla, usuarioId, columnaExtra) {
 async function main() {
   const email = process.argv[2];
   if (!email) {
-    throw new Error("Uso: node scripts/seed-demo.js <email-del-usuario>");
+    throw new Error("Uso: node scripts/seed-demo.js <email-del-usuario> [meses-de-historia]");
   }
+  const MESES_HISTORIA = Number(process.argv[3]) || 24;
   const [[usuario]] = await pool.query("SELECT id FROM usuarios WHERE email = ?", [email]);
   if (!usuario) {
     throw new Error(`No existe un usuario con email ${email}`);
